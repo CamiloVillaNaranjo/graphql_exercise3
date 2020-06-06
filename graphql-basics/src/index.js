@@ -5,35 +5,42 @@ import { GraphQLServer } from "graphql-yoga";
 // Type definitions (Schema)
 const typeDefs = `
     type Query {
-        id: ID!
-        title: String!
-        price: Float!
-        releaseYear: Int
-        rating: Float
-        inStock: Boolean!
+        me: User!
+        post: Post!
+    }
+
+    type User {
+      id:ID!
+      name: String!
+      email: String!
+      age: Int
+    }
+
+    type Post{
+      id: ID!
+      title: String!
+      body: String!
+      published: Boolean!
     }
 `;
 
 // Resolvers
 const resolvers = {
   Query: {
-    id() {
-      return "sc12weX09hfs";
+    me() {
+      return {
+        id: "sc12weX09hfs",
+        name: "Camilo Villa",
+        email: "camilo@example.com",
+      };
     },
-    title() {
-      return "Programming GraphQL for beginners";
-    },
-    price() {
-      return 8.99;
-    },
-    releaseYear() {
-      return 2008;
-    },
-    rating() {
-      return 3.5;
-    },
-    inStock() {
-      return true;
+    post() {
+      return {
+        id: "qw123fgh",
+        title: "GraphQL for beginners",
+        body: "",
+        published: false,
+      };
     },
   },
 };
