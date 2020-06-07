@@ -2,13 +2,16 @@ import {
   GraphQLServer
 } from "graphql-yoga";
 
+const reducer = (acummulator, currentValue) => acummulator + currentValue
+
 //Scalar Types: String Boolean Int Float ID
 
 // Type definitions (Schema)
 const typeDefs = `
     type Query {
       greeting(name: String, position: String): String!
-      add(a:Float!, b:Float!): Float!
+      add(numbers: [Float!]!): Float!
+      grades:[Int!]!
       me: User!
       post: Post!
     }
@@ -39,7 +42,14 @@ const resolvers = {
       }
     },
     add(parent, args, cts, info) {
-      return args.a + args.b
+      if (args.numbers.length === 0) {
+        return 0;
+      }
+
+      return args.numbers.reduce(reducer);
+    },
+    grades(parent, args, cts, info) {
+      return [12, 33, 55]
     },
     me() {
       return {
