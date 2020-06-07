@@ -1,12 +1,16 @@
-import { GraphQLServer } from "graphql-yoga";
+import {
+  GraphQLServer
+} from "graphql-yoga";
 
 //Scalar Types: String Boolean Int Float ID
 
 // Type definitions (Schema)
 const typeDefs = `
     type Query {
-        me: User!
-        post: Post!
+      greeting(name: String, position: String): String!
+      add(a:Float!, b:Float!): Float!
+      me: User!
+      post: Post!
     }
 
     type User {
@@ -27,6 +31,16 @@ const typeDefs = `
 // Resolvers
 const resolvers = {
   Query: {
+    greeting(parent, args, ctx, info) {
+      if (args.name && args.position) {
+        return `Hello, ${args.name} you are my favorite ${args.position}!`
+      } else {
+        return 'Hello!'
+      }
+    },
+    add(parent, args, cts, info) {
+      return args.a + args.b
+    },
     me() {
       return {
         id: "sc12weX09hfs",
