@@ -2,16 +2,47 @@ import {
   GraphQLServer
 } from "graphql-yoga";
 
-const reducer = (acummulator, currentValue) => acummulator + currentValue
-
 //Scalar Types: String Boolean Int Float ID
+//Demo Users
+const users = [{
+  id: '1',
+  name: 'Camilo',
+  email: 'camilo@example.com',
+  age: 43
+}, {
+  id: '2',
+  name: 'Margarita',
+  email: 'margarita@example.com'
+}, {
+  id: '3',
+  name: 'Emmanuel',
+  email: 'shakadevirgo@example.com',
+  age: 17
+}]
+
+//Demo posts
+const posts = [{
+  id: "p1",
+  title: "GraphQL for beginners",
+  body: "",
+  published: false
+}, {
+  id: "p2",
+  title: ".NET Core from Zero to Expert!",
+  body: "In this post we are going to learn about .NET Core...",
+  published: true
+}, {
+  id: "p3",
+  title: "GraphQL. Why you should Learn it?",
+  body: "In this post I will express my point of view.",
+  published: true
+}]
 
 // Type definitions (Schema)
 const typeDefs = `
     type Query {
-      greeting(name: String, position: String): String!
-      add(numbers: [Float!]!): Float!
-      grades:[Int!]!
+      users(query: String): [User!]!
+      posts(query: String): [Post!]!
       me: User!
       post: Post!
     }
@@ -34,22 +65,23 @@ const typeDefs = `
 // Resolvers
 const resolvers = {
   Query: {
-    greeting(parent, args, ctx, info) {
-      if (args.name && args.position) {
-        return `Hello, ${args.name} you are my favorite ${args.position}!`
-      } else {
-        return 'Hello!'
-      }
-    },
-    add(parent, args, cts, info) {
-      if (args.numbers.length === 0) {
-        return 0;
+    users(parent, args, ctx, info) {
+      if (!args.query) {
+        return users;
       }
 
-      return args.numbers.reduce(reducer);
+      return users.filter((user) => {
+        return user.name.toLowerCase().includes(args.query.toLowerCase());
+      });
     },
-    grades(parent, args, cts, info) {
-      return [12, 33, 55]
+    posts(parent, args, ctx, info) {
+      if (!args.query) {
+        return posts;
+      }
+
+      return posts.filter((post) => {
+        return post.body.toLowerCase().includes(args.query.toLowerCase()) || post.title.toLowerCase().includes(args.query.toLowerCase());
+      });
     },
     me() {
       return {
