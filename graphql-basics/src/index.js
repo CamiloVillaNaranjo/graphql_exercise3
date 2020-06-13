@@ -1,48 +1,18 @@
 import {
   GraphQLServer
 } from "graphql-yoga";
-
-//Scalar Types: String Boolean Int Float ID
-//Demo Users
-const users = [{
-  id: '1',
-  name: 'Camilo',
-  email: 'camilo@example.com',
-  age: 43
-}, {
-  id: '2',
-  name: 'Margarita',
-  email: 'margarita@example.com'
-}, {
-  id: '3',
-  name: 'Emmanuel',
-  email: 'shakadevirgo@example.com',
-  age: 17
-}]
-
-//Demo posts
-const posts = [{
-  id: "p1",
-  title: "GraphQL for beginners",
-  body: "",
-  published: false
-}, {
-  id: "p2",
-  title: ".NET Core from Zero to Expert!",
-  body: "In this post we are going to learn about .NET Core...",
-  published: true
-}, {
-  id: "p3",
-  title: "GraphQL. Why you should Learn it?",
-  body: "In this post I will express my point of view.",
-  published: true
-}]
+import {
+  posts,
+  users,
+  comments
+} from './Demo-Data/demopost';
 
 // Type definitions (Schema)
 const typeDefs = `
     type Query {
       users(query: String): [User!]!
       posts(query: String): [Post!]!
+      comments(query: String): [Comment!]!
       me: User!
       post: Post!
     }
@@ -52,6 +22,8 @@ const typeDefs = `
       name: String!
       email: String!
       age: Int
+      posts:[Post!]!
+      comments:[Comment!]!
     }
 
     type Post{
@@ -59,6 +31,15 @@ const typeDefs = `
       title: String!
       body: String!
       published: Boolean!
+      author: User!
+      comments:[Comment!]!
+    }
+
+    type Comment{
+      id: ID!
+      text: String!
+      author: User!
+      post: Post!
     }
 `;
 
@@ -98,7 +79,52 @@ const resolvers = {
         published: false,
       };
     },
+    comments(parent, args, ctx, info) {
+      if (!args.query) {
+        return comments
+      }
+
+      return comments.filter((comment) => {
+        return comment.text.toLowerCase().includes(args.query.toLowerCase());
+      });
+    }
   },
+  Post: {
+    author(parent, args, ctx, info) {
+      return users.find((user) => {
+        return user.id === parent.author;
+      })
+    },
+    comments(parent, args, ctx, info) {
+      return comments.filter((comment) => {
+        return comment.post === parent.id
+      });
+    }
+  },
+  Comment: {
+    author(parent, args, ctx, info) {
+      return users.find((user) => {
+        return user.id === parent.author;
+      })
+    },
+    post(parent, args, ctx, info) {
+      return posts.find((post) => {
+        return post.id === parent.post;
+      })
+    }
+  },
+  User: {
+    posts(parent, args, ctx, info) {
+      return posts.filter((post) => {
+        return post.author === parent.id
+      })
+    },
+    comments(parent, args, ctx, info) {
+      return comments.filter((comment) => {
+        return comment.author === parent.id
+      })
+    }
+  }
 };
 
 const server = new GraphQLServer({
