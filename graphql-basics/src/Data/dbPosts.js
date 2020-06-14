@@ -1,5 +1,5 @@
 //Demo Users
-let users = [{
+const Users = [{
     id: '1',
     name: 'Camilo',
     email: 'camilo@example.com',
@@ -16,7 +16,7 @@ let users = [{
 }]
 
 //Demo posts
-let posts = [{
+const Posts = [{
     id: "11",
     title: "GraphQL for beginners",
     body: "",
@@ -36,7 +36,7 @@ let posts = [{
     author: "3"
 }]
 
-let comments = [{
+const Comments = [{
     id: "101",
     text: "It is amaze post, thanks",
     author: "2",
@@ -58,8 +58,13 @@ let comments = [{
     post: "13"
 }]
 
-export {
-    posts,
-    users,
-    comments
+const db = {
+    Posts,
+    Users,
+    Comments
 };
+
+export {
+    db as
+    default
+}
