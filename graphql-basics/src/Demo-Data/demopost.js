@@ -1,5 +1,5 @@
 //Demo Users
-const users = [{
+let users = [{
     id: '1',
     name: 'Camilo',
     email: 'camilo@example.com',
@@ -16,7 +16,7 @@ const users = [{
 }]
 
 //Demo posts
-const posts = [{
+let posts = [{
     id: "11",
     title: "GraphQL for beginners",
     body: "",
@@ -36,7 +36,7 @@ const posts = [{
     author: "3"
 }]
 
-const comments = [{
+let comments = [{
     id: "101",
     text: "It is amaze post, thanks",
     author: "2",

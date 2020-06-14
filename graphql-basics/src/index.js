@@ -7,9 +7,9 @@ import {
 } from "uuid";
 
 import {
-  posts,
-  users,
-  comments
+  comments as Commnets,
+  posts as Posts,
+  users as Users
 } from "./Demo-Data/demopost";
 
 // Type definitions (Schema)
@@ -23,9 +23,10 @@ const typeDefs = `
     }
 
     type Mutation {
-      createUser(data: CreateUserInput): User!
-      createPost(data: CreatePostInput): Post!
-      createComment(data: CreateCommentInput): Comment!
+      createUser(data: CreateUserInput!): User!
+      deleteUser(id: ID!): User!
+      createPost(data: CreatePostInput!): Post!
+      createComment(data: CreateCommentInput!): Comment!
     }
 
     input CreateUserInput{
@@ -38,13 +39,13 @@ const typeDefs = `
       title: String!,
       body: String!,
       published: Boolean!,
-      authorId: ID!
+      author: ID!
     }
 
     input CreateCommentInput{
       text: String!,
-      authorId: ID!,
-      postId: ID!
+      author: ID!,
+      post: ID!
     }
 
     type User {
@@ -78,19 +79,19 @@ const resolvers = {
   Query: {
     users(parent, args, ctx, info) {
       if (!args.query) {
-        return users;
+        return Users;
       }
 
-      return users.filter((user) => {
+      return Users.filter((user) => {
         return user.name.toLowerCase().includes(args.query.toLowerCase());
       });
     },
     posts(parent, args, ctx, info) {
       if (!args.query) {
-        return posts;
+        return Posts;
       }
 
-      return posts.filter((post) => {
+      return Posts.filter((post) => {
         return (
           post.body.toLowerCase().includes(args.query.toLowerCase()) ||
           post.title.toLowerCase().includes(args.query.toLowerCase())
@@ -124,7 +125,7 @@ const resolvers = {
   },
   Mutation: {
     createUser(parent, args, ctx, info) {
-      const emailTaken = users.some((user) => user.email === args.data.email);
+      const emailTaken = Users.some((user) => user.email === args.data.email);
       if (emailTaken) {
         throw new Error("Email submited already exist in our records.");
       }
@@ -134,11 +135,34 @@ const resolvers = {
         ...args.data
       };
 
-      users.push(user);
+      Users.push(user);
       return user;
     },
+    deleteUser(parent, args, ctx, info) {
+      const userIndex = Users.findIndex((user) => user.id === args.id)
+
+      if (userIndex === -1) {
+        throw Error('User not found');
+      }
+
+      const deletedUsers = Users.splice(userIndex, 1);
+
+      Posts = Posts.filter((post) => {
+        const match = post.author === args.id
+
+        if (match) {
+          Comments = Comments.filter((comment) => comment.post !== post.id)
+        }
+
+        return !match
+      });
+
+      Comments = Comments.filter((comment) => comment.author !== args.id)
+
+      return deletedUsers[0]
+    },
     createPost(parent, args, ctx, info) {
-      const userExists = users.some((user) => user.id === args.data.authorId);
+      const userExists = Users.some((user) => user.id === args.data.author);
 
       if (!userExists) return new Error("User not found!");
 
@@ -147,14 +171,14 @@ const resolvers = {
         ...args.data
       };
 
-      posts.push(post);
+      Posts.push(post);
 
       return post;
     },
     createComment(parent, args, ctx, info) {
-      const userExists = users.some((user) => user.id === args.data.authorId);
-      const postIsPublished = posts.some(
-        (post) => post.id === args.data.postId && post.published
+      const userExists = Users.some((user) => user.id === args.data.author);
+      const postIsPublished = Posts.some(
+        (post) => post.id === args.data.post && post.published
       );
 
       if (!userExists || !postIsPublished)
@@ -165,45 +189,33 @@ const resolvers = {
         ...args.data
       };
 
-      comments.push(comment);
+      Comments.push(comment);
 
       return comment;
     },
   },
   Post: {
     author(parent, args, ctx, info) {
-      return users.find((user) => {
-        return user.id === parent.author;
-      });
+      return Users.find((user) => user.id === parent.author);
     },
     comments(parent, args, ctx, info) {
-      return comments.filter((comment) => {
-        return comment.post === parent.id;
-      });
+      return Comments.filter((comment) => comment.post === parent.id);
     },
   },
   Comment: {
     author(parent, args, ctx, info) {
-      return users.find((user) => {
-        return user.id === parent.author;
-      });
+      return Users.find((user) => user.id === parent.author);
     },
     post(parent, args, ctx, info) {
-      return posts.find((post) => {
-        return post.id === parent.post;
-      });
+      return Posts.find((post) => post.id === parent.post);
     },
   },
   User: {
     posts(parent, args, ctx, info) {
-      return posts.filter((post) => {
-        return post.author === parent.id;
-      });
+      return Posts.filter((post) => post.author === parent.id);
     },
     comments(parent, args, ctx, info) {
-      return comments.filter((comment) => {
-        return comment.author === parent.id;
-      });
+      return Comments.filter((comment) => comment.author === parent.id);
     },
   },
 };
