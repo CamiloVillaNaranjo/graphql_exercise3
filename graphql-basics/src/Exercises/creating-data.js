@@ -1,77 +1,47 @@
-import {
-  GraphQLServer
-} from "graphql-yoga";
-
-import {
-  v4 as uuidv4
-} from "uuid";
-
-import {
-  posts,
-  users,
-  comments
-} from "./Demo-Data/demopost";
+import { v4 as uuidv4 } from "uuid";
+import { posts, users, comments } from "./Demo-Data/demopost";
 
 // Type definitions (Schema)
 const typeDefs = `
-    type Query {
-      users(query: String): [User!]!
-      posts(query: String): [Post!]!
-      comments(query: String): [Comment!]!
-      me: User!
-      post: Post!
-    }
-
-    type Mutation {
-      createUser(data: CreateUserInput): User!
-      createPost(data: CreatePostInput): Post!
-      createComment(data: CreateCommentInput): Comment!
-    }
-
-    input CreateUserInput{
-      name: String!, 
-      email: String!, 
-      age: Int
-    }
-
-    input CreatePostInput{
-      title: String!,
-      body: String!,
-      published: Boolean!,
-      authorId: ID!
-    }
-
-    input CreateCommentInput{
-      text: String!,
-      authorId: ID!,
-      postId: ID!
-    }
-
-    type User {
-      id:ID!
-      name: String!
-      email: String!
-      age: Int
-      posts:[Post!]!
-      comments:[Comment!]!
-    }
-
-    type Post{
-      id: ID!
-      title: String!
-      body: String!
-      published: Boolean!
-      author: User!
-      comments:[Comment!]!
-    }
-
-    type Comment{
-      id: ID!
-      text: String!
-      author: User!
-      post: Post!
-    }
-`;
+      type Query {
+        users(query: String): [User!]!
+        posts(query: String): [Post!]!
+        comments(query: String): [Comment!]!
+        me: User!
+        post: Post!
+      }
+  
+      type Mutation {
+        createUser(name: String!, email: String!, age: Int): User!
+        createPost(title: String!, body: String!, published: Boolean!, authorId: ID!): Post!
+        createComment(text: String!, authorId: ID!, postId: ID!): Comment!
+      }
+  
+      type User {
+        id:ID!
+        name: String!
+        email: String!
+        age: Int
+        posts:[Post!]!
+        comments:[Comment!]!
+      }
+  
+      type Post{
+        id: ID!
+        title: String!
+        body: String!
+        published: Boolean!
+        author: User!
+        comments:[Comment!]!
+      }
+  
+      type Comment{
+        id: ID!
+        text: String!
+        author: User!
+        post: Post!
+      }
+  `;
 
 // Resolvers
 const resolvers = {
@@ -124,27 +94,32 @@ const resolvers = {
   },
   Mutation: {
     createUser(parent, args, ctx, info) {
-      const emailTaken = users.some((user) => user.email === args.data.email);
+      const emailTaken = users.some((user) => user.email === args.email);
       if (emailTaken) {
         throw new Error("Email submited already exist in our records.");
       }
 
       const user = {
         id: uuidv4(),
-        ...args.data
+        name: args.name,
+        email: args.email,
+        age: args.age,
       };
 
       users.push(user);
       return user;
     },
     createPost(parent, args, ctx, info) {
-      const userExists = users.some((user) => user.id === args.data.authorId);
+      const userExists = users.some((user) => user.id === args.authorId);
 
       if (!userExists) return new Error("User not found!");
 
       const post = {
         id: uuidv4(),
-        ...args.data
+        title: args.title,
+        body: args.body,
+        published: args.published,
+        author: args.authorId,
       };
 
       posts.push(post);
@@ -152,9 +127,9 @@ const resolvers = {
       return post;
     },
     createComment(parent, args, ctx, info) {
-      const userExists = users.some((user) => user.id === args.data.authorId);
+      const userExists = users.some((user) => user.id === args.authorId);
       const postIsPublished = posts.some(
-        (post) => post.id === args.data.postId && post.published
+        (post) => post.id === args.postId && post.published
       );
 
       if (!userExists || !postIsPublished)
@@ -162,7 +137,9 @@ const resolvers = {
 
       const comment = {
         id: uuidv4(),
-        ...args.data
+        text: args.text,
+        author: args.authorId,
+        post: args.postId,
       };
 
       comments.push(comment);
@@ -207,12 +184,3 @@ const resolvers = {
     },
   },
 };
-
-const server = new GraphQLServer({
-  typeDefs,
-  resolvers,
-});
-
-server.start(() => {
-  console.log("The server is Up!");
-});
